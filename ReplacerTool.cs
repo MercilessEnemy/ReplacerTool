@@ -21,6 +21,7 @@ public class ReplacerTool : EditorWindow
     [SerializeField] private Vector3 newPosition;
     [SerializeField] private Vector3 newRotation;
     [SerializeField] private Vector3 newScale;
+    [SerializeField] private int selectedLOD;
     [SerializeField] private List<float> lods;
     [SerializeField] private bool isHDRP;
     [SerializeField] private Shader sourceShader;
@@ -78,6 +79,12 @@ public class ReplacerTool : EditorWindow
         GUILayout.Label("Scale:");
         GUILayout.FlexibleSpace();
         EditorGUILayout.Vector3Field("", newScale);
+        GUILayout.EndHorizontal();
+
+        GUILayout.BeginHorizontal();
+        GUILayout.Label("Selected LOD:");
+        GUILayout.FlexibleSpace();
+        selectedLOD = EditorGUILayout.IntField("", selectedLOD);
         GUILayout.EndHorizontal();
 
         GUILayout.BeginHorizontal();
@@ -622,7 +629,7 @@ public class ReplacerTool : EditorWindow
         foreach (Transform child in lodTransform)
         {
             var renderer = child.GetComponent<Renderer>();
-            if (renderer != null)
+            if (renderer != null && selectedLOD == child.GetSiblingIndex())
             {
                 Debug.Log(child.gameObject);
                 DestroyImmediate(go);
