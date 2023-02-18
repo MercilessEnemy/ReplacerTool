@@ -17,6 +17,7 @@ public class PrefabReplacerTool : EditorWindow
     [SerializeField] private Shader targetShader;
     [SerializeField] private bool isHDRP;
 
+    private bool showPrefabInfo = true;
     private Vector2 scrollPosition = Vector2.zero;
     private GameObject prefab;
     private List<string> gameObjectNames = new List<string>();
@@ -61,7 +62,7 @@ public class PrefabReplacerTool : EditorWindow
 
             GUILayout.Label("Unparent a gameObject from the scene:");
 
-            if (GUILayout.Button("Unparent gameObject"))
+            if (GUILayout.Button("Unparent selected gameObject"))
             {
                 UnparentGameObject();
             }
@@ -72,96 +73,101 @@ public class PrefabReplacerTool : EditorWindow
 
         GUILayout.Space(10);
 
-        GUILayout.Label("Transform:", EditorStyles.boldLabel);
-        EditorGUILayout.BeginVertical("Box");
+        showPrefabInfo = EditorGUILayout.Foldout(showPrefabInfo, "Prefab Information");
 
-        GUILayout.BeginHorizontal();
+        if (showPrefabInfo)
         {
-            GUILayout.Label("Position:");
-            GUILayout.FlexibleSpace();
-            GUILayout.Label(position.ToString());
-        }
-        GUILayout.EndHorizontal();
-
-        GUILayout.BeginHorizontal();
-        {
-            GUILayout.Label("Rotation:");
-            GUILayout.FlexibleSpace();
-            GUILayout.Label(rotation.ToString());
-        }
-        GUILayout.EndHorizontal();
-
-        GUILayout.BeginHorizontal();
-        {
-            GUILayout.Label("Scale:");
-            GUILayout.FlexibleSpace();
-            GUILayout.Label(scale.ToString());
-        }
-        GUILayout.EndHorizontal();
-
-        EditorGUILayout.EndVertical();
-
-        GUILayout.Space(10);
-
-        GUILayout.Label("Layers:", EditorStyles.boldLabel);
-        EditorGUILayout.BeginVertical("Box");
-
-        for (var i = 0; i < layerNames.Count; ++i)
-        {
-            GUILayout.BeginHorizontal();
-            {
-                GUILayout.Label(gameObjectNames[i] + ":");
-                GUILayout.FlexibleSpace();
-                GUILayout.Label(layerNames[i]);
-            }
-            GUILayout.EndHorizontal();
-        }
-
-        EditorGUILayout.EndVertical();
-
-        GUILayout.Space(10);
-
-        GUILayout.Label("Static:", EditorStyles.boldLabel);
-        EditorGUILayout.BeginVertical("Box");
-
-        for (var i = 0; i < isStatic.Count; ++i)
-        {
-            GUILayout.BeginHorizontal();
-            {
-                GUILayout.Label(gameObjectNames[i] + ":");
-                GUILayout.FlexibleSpace();
-                GUILayout.Label(isStatic[i].ToString());
-            }
-            GUILayout.EndHorizontal();
-        }
-
-        EditorGUILayout.EndVertical();
-
-        GUILayout.Space(10);
-
-        if (lodGroup != null)
-        {
-            GUILayout.Label("LODs:", EditorStyles.boldLabel);
+            GUILayout.Label("Transform:", EditorStyles.boldLabel);
             EditorGUILayout.BeginVertical("Box");
 
-            for (var i = 0; i < lodGroup.lodCount; ++i)
+            GUILayout.BeginHorizontal();
+            {
+                GUILayout.Label("Position:");
+                GUILayout.FlexibleSpace();
+                GUILayout.Label(position.ToString());
+            }
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            {
+                GUILayout.Label("Rotation:");
+                GUILayout.FlexibleSpace();
+                GUILayout.Label(rotation.ToString());
+            }
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            {
+                GUILayout.Label("Scale:");
+                GUILayout.FlexibleSpace();
+                GUILayout.Label(scale.ToString());
+            }
+            GUILayout.EndHorizontal();
+
+            EditorGUILayout.EndVertical();
+
+            GUILayout.Space(10);
+
+            GUILayout.Label("Layers:", EditorStyles.boldLabel);
+            EditorGUILayout.BeginVertical("Box");
+
+            for (var i = 0; i < layerNames.Count; ++i)
             {
                 GUILayout.BeginHorizontal();
                 {
-                    GUILayout.Label("LOD" + i + ":");
+                    GUILayout.Label(gameObjectNames[i] + ":");
                     GUILayout.FlexibleSpace();
-                    GUILayout.Label(lodGroup.GetLODs()[i].screenRelativeTransitionHeight.ToString());
+                    GUILayout.Label(layerNames[i]);
                 }
                 GUILayout.EndHorizontal();
             }
 
             EditorGUILayout.EndVertical();
-            GUILayout.Space(10);
-        }
 
-        if (GUILayout.Button("Refresh Prefab Information"))
-        {
-            ShowPrefabInformation();
+            GUILayout.Space(10);
+
+            GUILayout.Label("Static:", EditorStyles.boldLabel);
+            EditorGUILayout.BeginVertical("Box");
+
+            for (var i = 0; i < isStatic.Count; ++i)
+            {
+                GUILayout.BeginHorizontal();
+                {
+                    GUILayout.Label(gameObjectNames[i] + ":");
+                    GUILayout.FlexibleSpace();
+                    GUILayout.Label(isStatic[i].ToString());
+                }
+                GUILayout.EndHorizontal();
+            }
+
+            EditorGUILayout.EndVertical();
+
+            GUILayout.Space(10);
+
+            if (lodGroup != null)
+            {
+                GUILayout.Label("LODs:", EditorStyles.boldLabel);
+                EditorGUILayout.BeginVertical("Box");
+
+                for (var i = 0; i < lodGroup.lodCount; ++i)
+                {
+                    GUILayout.BeginHorizontal();
+                    {
+                        GUILayout.Label("LOD" + i + ":");
+                        GUILayout.FlexibleSpace();
+                        GUILayout.Label(lodGroup.GetLODs()[i].screenRelativeTransitionHeight.ToString());
+                    }
+                    GUILayout.EndHorizontal();
+                }
+
+                EditorGUILayout.EndVertical();
+                GUILayout.Space(10);
+            }
+
+            if (GUILayout.Button("Refresh Prefab Information"))
+            {
+                ShowPrefabInformation();
+            }
         }
 
         GUILayout.Space(10);
@@ -316,6 +322,11 @@ public class PrefabReplacerTool : EditorWindow
         EditorGUILayout.EndVertical();
         GUILayout.Space(10);
 
+        if (GUILayout.Button("Unpack prefab"))
+        {
+            UnpackSelectedPrefab();
+        }
+
         if (GUILayout.Button("Find matching prefabs"))
         {
             FindMatchingPrefabs();
@@ -336,7 +347,7 @@ public class PrefabReplacerTool : EditorWindow
 
         GUILayout.Space(10);
 
-        if (GUILayout.Button("Unparent gameObject"))
+        if (GUILayout.Button("Unparent selected gameObject"))
         {
             UnparentGameObject();
         }
@@ -685,34 +696,55 @@ public class PrefabReplacerTool : EditorWindow
 
         foreach (var obj in selectedObjects)
         {
-            /*var parentPrefabInstance = PrefabUtility.GetPrefabInstanceHandle(obj.transform.parent);
-            if (parentPrefabInstance != null)
-            {
-                PrefabUtility.UnpackPrefabInstance(obj.transform.parent.gameObject, PrefabUnpackMode.OutermostRoot, InteractionMode.AutomatedAction);
-            }*/
-
             obj.transform.SetParent(null);
         }
 
-        FindMatchingPrefabs();
+        EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
+    }
+    
+    private void UnpackSelectedPrefab()
+    {
+        var selectedObjects = Selection.gameObjects;
+
+        if (selectedObjects == null || selectedObjects.Length == 0)
+        {
+            Debug.LogWarning("No gameObjects selected.");
+            return;
+        }
+
+        foreach (var obj in selectedObjects)
+        {
+            var parentPrefabInstance = PrefabUtility.GetPrefabInstanceHandle(obj.transform.parent);
+            if (parentPrefabInstance != null)
+            {
+                PrefabUtility.UnpackPrefabInstance(obj.transform.parent.gameObject, PrefabUnpackMode.OutermostRoot, InteractionMode.AutomatedAction);
+            }
+        }
+
         EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
     }
 
     private void FindMatchingPrefabs()
     {
         matchingPrefabs.Clear();
+
+        if (prefab == null)
+            return;
+
         var allObjects = FindObjectsOfType<GameObject>();
-        foreach (GameObject obj in allObjects)
+        
+        foreach (var obj in allObjects)
         {
-            if (PrefabUtility.GetPrefabInstanceStatus(obj) == PrefabInstanceStatus.Connected)
+            if (PrefabUtility.GetPrefabAssetType(obj) != PrefabAssetType.NotAPrefab)
             {
-                GameObject prefabToMatch = PrefabUtility.GetCorrespondingObjectFromSource(obj);
-                if (prefabToMatch == prefab)
+                if (PrefabUtility.GetCorrespondingObjectFromOriginalSource(obj) == prefab)
                 {
                     matchingPrefabs.Add(obj);
                 }
             }
         }
+
+        Debug.Log(matchingPrefabs.Count + " matching prefabs were found");
 
         Repaint();
     }
