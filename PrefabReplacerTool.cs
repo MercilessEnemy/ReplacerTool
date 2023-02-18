@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 using System.IO;
+using UnityEditor.SceneManagement;
 
 //using AmplifyImpostors;
 
@@ -29,6 +30,7 @@ public class PrefabReplacerTool : EditorWindow
     private LODGroup lodGroup;
     private List<Material> materials = new List<Material>();
     private List<string> assetPaths = new List<string>();
+    public List<GameObject> matchingPrefabs = new List<GameObject>();
 
     [MenuItem("Tools/Prefab Replacer Tool")]
     public static void ShowWindow()
@@ -47,6 +49,8 @@ public class PrefabReplacerTool : EditorWindow
         {
             prefab = newPrefab;
             ShowPrefabInformation();
+
+            matchingPrefabs.Clear();
         }
 
         if (prefab == null)
@@ -54,6 +58,8 @@ public class PrefabReplacerTool : EditorWindow
             EditorGUILayout.HelpBox("No prefab selected.", MessageType.Info);
 
             GUILayout.Space(10);
+
+            GUILayout.Label("Unparent a gameObject from the scene:");
 
             if (GUILayout.Button("Unparent gameObject"))
             {
@@ -280,7 +286,7 @@ public class PrefabReplacerTool : EditorWindow
 
         GUILayout.Space(10);
 
-        if (GUILayout.Button("Find All Materials"))
+        if (GUILayout.Button("Find All matching shader materials"))
         {
             GetMaterials();
         }
@@ -308,6 +314,26 @@ public class PrefabReplacerTool : EditorWindow
         }
 
         EditorGUILayout.EndVertical();
+        GUILayout.Space(10);
+
+        if (GUILayout.Button("Find matching prefabs"))
+        {
+            FindMatchingPrefabs();
+        }
+
+        EditorGUILayout.BeginVertical("Box");
+
+        if (matchingPrefabs.Count > 0)
+        {
+            GUILayout.Label("Matching Prefabs:", EditorStyles.boldLabel);
+            foreach (var matchingPrefab in matchingPrefabs)
+            {
+                EditorGUILayout.ObjectField(matchingPrefab, typeof(GameObject), true);
+            }
+        }
+
+        EditorGUILayout.EndVertical();
+
         GUILayout.Space(10);
 
         if (GUILayout.Button("Unparent gameObject"))
@@ -556,8 +582,14 @@ public class PrefabReplacerTool : EditorWindow
         materials.Clear();
         assetPaths.Clear();
 
-        if (prefab == null || sourceShader == null)
+        if (prefab == null)
             return;
+
+        if (sourceShader == null)
+        {
+            Debug.Log("Please select a source shader");
+            return;
+        }
 
         var meshRenderer = prefab.gameObject.GetComponent<MeshRenderer>();
 
@@ -661,6 +693,28 @@ public class PrefabReplacerTool : EditorWindow
 
             obj.transform.SetParent(null);
         }
+
+        FindMatchingPrefabs();
+        EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
+    }
+
+    private void FindMatchingPrefabs()
+    {
+        matchingPrefabs.Clear();
+        var allObjects = FindObjectsOfType<GameObject>();
+        foreach (GameObject obj in allObjects)
+        {
+            if (PrefabUtility.GetPrefabInstanceStatus(obj) == PrefabInstanceStatus.Connected)
+            {
+                GameObject prefabToMatch = PrefabUtility.GetCorrespondingObjectFromSource(obj);
+                if (prefabToMatch == prefab)
+                {
+                    matchingPrefabs.Add(obj);
+                }
+            }
+        }
+
+        Repaint();
     }
 
     private void AddImpostor()
