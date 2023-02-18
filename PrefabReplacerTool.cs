@@ -55,9 +55,9 @@ public class PrefabReplacerTool : EditorWindow
 
             GUILayout.Space(10);
 
-            if (GUILayout.Button("Move selected gameObjects to root"))
+            if (GUILayout.Button("Unparent gameObject"))
             {
-                MoveSelectedObjectsToRoot();
+                UnparentGameObject();
             }
 
             EditorGUILayout.EndScrollView();
@@ -310,9 +310,9 @@ public class PrefabReplacerTool : EditorWindow
         EditorGUILayout.EndVertical();
         GUILayout.Space(10);
 
-        if (GUILayout.Button("Move selected gameObjects to root"))
+        if (GUILayout.Button("Unparent gameObject"))
         {
-            MoveSelectedObjectsToRoot();
+            UnparentGameObject();
         }
 
         GUILayout.Space(10);
@@ -641,7 +641,7 @@ public class PrefabReplacerTool : EditorWindow
         materials.Clear();
     }
 
-    private void MoveSelectedObjectsToRoot()
+    private void UnparentGameObject()
     {
         var selectedObjects = Selection.gameObjects;
 
@@ -653,41 +653,13 @@ public class PrefabReplacerTool : EditorWindow
 
         foreach (var obj in selectedObjects)
         {
-            if (PrefabUtility.IsPartOfPrefabInstance(obj))
+            /*var parentPrefabInstance = PrefabUtility.GetPrefabInstanceHandle(obj.transform.parent);
+            if (parentPrefabInstance != null)
             {
-                var parentPrefabInstanceRoot = PrefabUtility.GetOutermostPrefabInstanceRoot(obj);
-                if (PrefabUtility.IsPartOfPrefabAsset(parentPrefabInstanceRoot))
-                {
-                    Debug.LogWarning(obj.name + " is part of a nested prefab and cannot be moved.");
-                }
-                else
-                {
-                    var parentPrefabInstance = PrefabUtility.GetPrefabInstanceHandle(obj.transform.parent);
-                    if (parentPrefabInstance != null)
-                    {
-                        Debug.LogWarning("Cannot move nested prefabs.");
-                        continue;
-                    }
+                PrefabUtility.UnpackPrefabInstance(obj.transform.parent.gameObject, PrefabUnpackMode.OutermostRoot, InteractionMode.AutomatedAction);
+            }*/
 
-                    obj.transform.SetParent(null);
-                }
-            }
-            else if (PrefabUtility.IsPartOfPrefabAsset(obj))
-            {
-                var prefabAssetType = PrefabUtility.GetPrefabAssetType(obj);
-                if (prefabAssetType != PrefabAssetType.Regular && prefabAssetType != PrefabAssetType.Variant)
-                {
-                    Debug.LogWarning(obj.name + " is part of a nested prefab and cannot be moved.");
-                }
-                else
-                {
-                    Debug.LogWarning(obj.name + " is a top-level prefab belonging to a gameobject and cannot be moved.");
-                }
-            }
-            else
-            {
-                obj.transform.SetParent(null);
-            }
+            obj.transform.SetParent(null);
         }
     }
 
