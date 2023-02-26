@@ -23,9 +23,6 @@ public class PrefabReplacerTool : EditorWindow
     private List<string> gameObjectNames = new List<string>();
     private List<string> layerNames = new List<string>();
     private List<bool> isStatic = new List<bool>();
-    private Vector3 position;
-    private Vector3 rotation;
-    private Vector3 scale;
     private LayerMask newLayer;
     private bool staticEnabled;
     private LODGroup lodGroup;
@@ -84,7 +81,7 @@ public class PrefabReplacerTool : EditorWindow
             {
                 GUILayout.Label("Position:");
                 GUILayout.FlexibleSpace();
-                GUILayout.Label(position.ToString());
+                GUILayout.Label(prefab.transform.position.ToString());
             }
             GUILayout.EndHorizontal();
 
@@ -92,7 +89,7 @@ public class PrefabReplacerTool : EditorWindow
             {
                 GUILayout.Label("Rotation:");
                 GUILayout.FlexibleSpace();
-                GUILayout.Label(rotation.ToString());
+                GUILayout.Label(prefab.transform.localEulerAngles.ToString());
             }
             GUILayout.EndHorizontal();
 
@@ -100,7 +97,7 @@ public class PrefabReplacerTool : EditorWindow
             {
                 GUILayout.Label("Scale:");
                 GUILayout.FlexibleSpace();
-                GUILayout.Label(scale.ToString());
+                GUILayout.Label(prefab.transform.localScale.ToString());
             }
             GUILayout.EndHorizontal();
 
@@ -368,9 +365,6 @@ public class PrefabReplacerTool : EditorWindow
     {
         GetLayers();
         GetStaticObjects();
-        GetPosition();
-        GetRotation();
-        GetScale();
         GetLODGroup();
     }
 
@@ -411,14 +405,6 @@ public class PrefabReplacerTool : EditorWindow
         }
     }
 
-    private void GetPosition()
-    {
-        if (prefab == null)
-            return;
-
-        position = prefab.transform.position;
-    }
-
     private void UpdatePosition()
     {
         if (prefab == null)
@@ -427,28 +413,12 @@ public class PrefabReplacerTool : EditorWindow
         prefab.transform.position = newPosition;
     }
 
-    private void GetRotation()
-    {
-        if (prefab == null)
-            return;
-
-        rotation = prefab.transform.localEulerAngles;
-    }
-
     private void UpdateRotation()
     {
         if (prefab == null)
             return;
 
         prefab.transform.localEulerAngles = newRotation;
-    }
-
-    private void GetScale()
-    {
-        if (prefab == null)
-            return;
-
-        scale = prefab.transform.localScale;
     }
 
     private void UpdateScale()
