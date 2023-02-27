@@ -17,8 +17,10 @@ public class PrefabReplacerTool : EditorWindow
     [SerializeField] private Shader targetShader;
     [SerializeField] private bool isHDRP;
 
-    private bool showPrefabInfo = true;
+    private bool showLayers = true;
+    private bool showStatics = true;
     private Vector2 scrollPosition = Vector2.zero;
+    private GameObject newPrefab;
     private GameObject prefab;
     private List<string> gameObjectNames = new List<string>();
     private List<string> layerNames = new List<string>();
@@ -29,6 +31,9 @@ public class PrefabReplacerTool : EditorWindow
     private List<Material> materials = new List<Material>();
     private List<string> assetPaths = new List<string>();
     public List<GameObject> matchingPrefabs = new List<GameObject>();
+    private int vertexCount;
+    private int submeshCount;
+    private int triangleCount;
 
     [MenuItem("Tools/Prefab Replacer Tool")]
     public static void ShowWindow()
@@ -41,7 +46,43 @@ public class PrefabReplacerTool : EditorWindow
         scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
 
         GUILayout.Label("Select a prefab:");
-        var newPrefab = EditorGUILayout.ObjectField(prefab, typeof(GameObject), true) as GameObject;
+        newPrefab = EditorGUILayout.ObjectField(newPrefab, typeof(GameObject), true) as GameObject;
+
+        if (newPrefab == null)
+        {
+            EditorGUILayout.HelpBox("No prefab selected.", MessageType.Info);
+
+            if (Selection.activeGameObject == null)
+            {
+                EditorGUILayout.EndScrollView();
+                return;
+            }
+
+            GUILayout.Space(10);
+
+            EditorGUILayout.LabelField("Name: ", Selection.activeGameObject.name);
+
+            if (Selection.activeGameObject.GetComponent<MeshFilter>())
+            {
+                var meshFilter = Selection.activeGameObject.GetComponent<MeshFilter>();
+                vertexCount = meshFilter.sharedMesh.vertexCount;
+                triangleCount = meshFilter.sharedMesh.triangles.Length / 3;
+                submeshCount = meshFilter.sharedMesh.subMeshCount;
+
+                EditorGUILayout.LabelField("Vertices: ", vertexCount.ToString());
+                EditorGUILayout.LabelField("Triangles: ", triangleCount.ToString());
+                EditorGUILayout.LabelField("SubMeshes: ", submeshCount.ToString());
+            }
+
+            if (GUILayout.Button("Unparent selected gameObject"))
+            {
+                UnparentGameObject();
+            }
+
+            EditorGUILayout.EndScrollView();
+            Repaint();
+            return;
+        }
 
         if (newPrefab != prefab)
         {
@@ -51,61 +92,64 @@ public class PrefabReplacerTool : EditorWindow
             matchingPrefabs.Clear();
         }
 
-        if (prefab == null)
-        {
-            EditorGUILayout.HelpBox("No prefab selected.", MessageType.Info);
-
-            GUILayout.Space(10);
-
-            GUILayout.Label("Unparent a gameObject from the scene:");
-
-            if (GUILayout.Button("Unparent selected gameObject"))
-            {
-                UnparentGameObject();
-            }
-
-            EditorGUILayout.EndScrollView();
-            return;
-        }
-
         GUILayout.Space(10);
 
-        showPrefabInfo = EditorGUILayout.Foldout(showPrefabInfo, "Prefab Information");
+        GUILayout.Label("Prefab Information", EditorStyles.boldLabel);
 
-        if (showPrefabInfo)
+        if (prefab.GetComponent<MeshFilter>() != null)
         {
-            GUILayout.Label("Transform:", EditorStyles.boldLabel);
             EditorGUILayout.BeginVertical("Box");
 
-            GUILayout.BeginHorizontal();
-            {
-                GUILayout.Label("Position:");
-                GUILayout.FlexibleSpace();
-                GUILayout.Label(prefab.transform.position.ToString());
-            }
-            GUILayout.EndHorizontal();
+            var meshFilter = prefab.GetComponent<MeshFilter>();
 
-            GUILayout.BeginHorizontal();
-            {
-                GUILayout.Label("Rotation:");
-                GUILayout.FlexibleSpace();
-                GUILayout.Label(prefab.transform.localEulerAngles.ToString());
-            }
-            GUILayout.EndHorizontal();
+            vertexCount = meshFilter.sharedMesh.vertexCount;
+            triangleCount = meshFilter.sharedMesh.triangles.Length / 3;
+            submeshCount = meshFilter.sharedMesh.subMeshCount;
 
-            GUILayout.BeginHorizontal();
-            {
-                GUILayout.Label("Scale:");
-                GUILayout.FlexibleSpace();
-                GUILayout.Label(prefab.transform.localScale.ToString());
-            }
-            GUILayout.EndHorizontal();
+            EditorGUILayout.LabelField("Vertices: ", vertexCount.ToString());
+            EditorGUILayout.LabelField("Triangles: ", triangleCount.ToString());
+            EditorGUILayout.LabelField("SubMeshes: ", submeshCount.ToString());
 
             EditorGUILayout.EndVertical();
 
             GUILayout.Space(10);
+        }
 
-            GUILayout.Label("Layers:", EditorStyles.boldLabel);
+        GUILayout.Label("Transform:", EditorStyles.boldLabel);
+        EditorGUILayout.BeginVertical("Box");
+
+        GUILayout.BeginHorizontal();
+        {
+            GUILayout.Label("Position:");
+            GUILayout.FlexibleSpace();
+            GUILayout.Label(prefab.transform.position.ToString());
+        }
+        GUILayout.EndHorizontal();
+
+        GUILayout.BeginHorizontal();
+        {
+            GUILayout.Label("Rotation:");
+            GUILayout.FlexibleSpace();
+            GUILayout.Label(prefab.transform.localEulerAngles.ToString());
+        }
+        GUILayout.EndHorizontal();
+
+        GUILayout.BeginHorizontal();
+        {
+            GUILayout.Label("Scale:");
+            GUILayout.FlexibleSpace();
+            GUILayout.Label(prefab.transform.localScale.ToString());
+        }
+        GUILayout.EndHorizontal();
+
+        EditorGUILayout.EndVertical();
+
+        GUILayout.Space(10);
+
+        showLayers = EditorGUILayout.Foldout(showLayers, "Layers:");
+
+        if (showLayers)
+        {
             EditorGUILayout.BeginVertical("Box");
 
             for (var i = 0; i < layerNames.Count; ++i)
@@ -120,10 +164,14 @@ public class PrefabReplacerTool : EditorWindow
             }
 
             EditorGUILayout.EndVertical();
+        }
 
-            GUILayout.Space(10);
+        GUILayout.Space(10);
 
-            GUILayout.Label("Static:", EditorStyles.boldLabel);
+        showStatics = EditorGUILayout.Foldout(showStatics, "Static:");
+
+        if (showStatics)
+        {
             EditorGUILayout.BeginVertical("Box");
 
             for (var i = 0; i < isStatic.Count; ++i)
@@ -138,33 +186,42 @@ public class PrefabReplacerTool : EditorWindow
             }
 
             EditorGUILayout.EndVertical();
+        }
 
-            GUILayout.Space(10);
+        GUILayout.Space(10);
 
-            if (lodGroup != null)
+        if (lodGroup != null)
+        {
+            GUILayout.Label("LODs:", EditorStyles.boldLabel);
+            EditorGUILayout.BeginVertical("Box");
+
+            for (var i = 0; i < lodGroup.lodCount; ++i)
             {
-                GUILayout.Label("LODs:", EditorStyles.boldLabel);
-                EditorGUILayout.BeginVertical("Box");
-
-                for (var i = 0; i < lodGroup.lodCount; ++i)
+                GUILayout.BeginHorizontal();
                 {
-                    GUILayout.BeginHorizontal();
-                    {
-                        GUILayout.Label("LOD" + i + ":");
-                        GUILayout.FlexibleSpace();
-                        GUILayout.Label(lodGroup.GetLODs()[i].screenRelativeTransitionHeight.ToString());
-                    }
-                    GUILayout.EndHorizontal();
+                    GUILayout.Label("LOD" + i + ":");
+                    GUILayout.FlexibleSpace();
+                    GUILayout.Label(lodGroup.GetLODs()[i].screenRelativeTransitionHeight.ToString());
                 }
-
-                EditorGUILayout.EndVertical();
-                GUILayout.Space(10);
+                GUILayout.EndHorizontal();
             }
 
-            if (GUILayout.Button("Refresh Prefab Information"))
-            {
-                ShowPrefabInformation();
-            }
+            EditorGUILayout.EndVertical();
+            GUILayout.Space(10);
+        }
+
+        if (GUILayout.Button("Refresh Prefab Information"))
+        {
+            ShowPrefabInformation();
+        }
+
+        if (GUILayout.Button("Clear"))
+        {
+            newPrefab = null;
+            prefab = null;
+            EditorGUILayout.EndScrollView();
+            Repaint();
+            return;
         }
 
         GUILayout.Space(10);
@@ -319,10 +376,10 @@ public class PrefabReplacerTool : EditorWindow
         EditorGUILayout.EndVertical();
         GUILayout.Space(10);
 
-        if (GUILayout.Button("Unpack prefab"))
+        /*if (GUILayout.Button("Unpack prefab"))
         {
             UnpackSelectedPrefab();
-        }
+        }*/
 
         if (GUILayout.Button("Find matching prefabs"))
         {
@@ -671,7 +728,7 @@ public class PrefabReplacerTool : EditorWindow
 
         EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
     }
-    
+
     private void UnpackSelectedPrefab()
     {
         var selectedObjects = Selection.gameObjects;
@@ -687,7 +744,8 @@ public class PrefabReplacerTool : EditorWindow
             var parentPrefabInstance = PrefabUtility.GetPrefabInstanceHandle(obj.transform.parent);
             if (parentPrefabInstance != null)
             {
-                PrefabUtility.UnpackPrefabInstance(obj.transform.parent.gameObject, PrefabUnpackMode.OutermostRoot, InteractionMode.AutomatedAction);
+                PrefabUtility.UnpackPrefabInstance(obj.transform.parent.gameObject, PrefabUnpackMode.OutermostRoot,
+                    InteractionMode.AutomatedAction);
             }
         }
 
@@ -702,7 +760,7 @@ public class PrefabReplacerTool : EditorWindow
             return;
 
         var allObjects = FindObjectsOfType<GameObject>();
-        
+
         foreach (var obj in allObjects)
         {
             if (PrefabUtility.GetPrefabAssetType(obj) != PrefabAssetType.NotAPrefab)
