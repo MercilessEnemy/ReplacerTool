@@ -17,8 +17,9 @@ public class PrefabReplacerTool : EditorWindow
     [SerializeField] private Shader targetShader;
     [SerializeField] private bool isHDRP;
 
-    private bool showLayers = true;
-    private bool showStatics = true;
+    private bool isActive;
+    private bool showLayers;
+    private bool showStatics;
     private Vector2 scrollPosition = Vector2.zero;
     private GameObject newPrefab;
     private GameObject prefab;
@@ -62,6 +63,15 @@ public class PrefabReplacerTool : EditorWindow
 
             EditorGUILayout.LabelField("Name: ", Selection.activeGameObject.name);
 
+            isActive = EditorGUILayout.Toggle("Is Active", Selection.activeGameObject.activeSelf);
+
+            if (isActive != Selection.activeGameObject.activeSelf)
+            {
+                Selection.activeGameObject.SetActive(isActive);
+
+                EditorUtility.SetDirty(Selection.activeGameObject);
+            }
+
             if (Selection.activeGameObject.GetComponent<MeshFilter>())
             {
                 var meshFilter = Selection.activeGameObject.GetComponent<MeshFilter>();
@@ -87,6 +97,7 @@ public class PrefabReplacerTool : EditorWindow
         if (newPrefab != prefab)
         {
             prefab = newPrefab;
+
             ShowPrefabInformation();
 
             matchingPrefabs.Clear();
@@ -95,6 +106,15 @@ public class PrefabReplacerTool : EditorWindow
         GUILayout.Space(10);
 
         GUILayout.Label("Prefab Information", EditorStyles.boldLabel);
+
+        isActive = EditorGUILayout.Toggle("Is Active", prefab.activeSelf);
+
+        if (isActive != prefab.activeSelf)
+        {
+            prefab.SetActive(isActive);
+
+            EditorUtility.SetDirty(prefab);
+        }
 
         if (prefab.GetComponent<MeshFilter>() != null)
         {
